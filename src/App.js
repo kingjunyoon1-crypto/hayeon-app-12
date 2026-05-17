@@ -55,7 +55,6 @@ export default function App() {
   const [newWorkout, setNewWorkout] = useState({ member: '', date: '', exercise: '', sets: '', reps: '', weight: '', notes: '' });
   const [newDiet, setNewDiet] = useState({ member: '', date: '', foodName: '', image: null });
   const [newFeedback, setNewFeedback] = useState({ member: '', date: '', exercise: '', videoFile: null, feedback: '' });
-  const [selectedMember, setSelectedMember] = useState(null);
   const messagesEndRef = useRef(null);
   const dietImageRef = useRef(null);
   const feedbackVideoRef = useRef(null);
