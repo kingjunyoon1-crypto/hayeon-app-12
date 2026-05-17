@@ -134,44 +134,46 @@ export default function App() {
     }
   };
 
-  const addDietAnalysis = () => {
-    if (newDiet.member && newDiet.date && newDiet.foodName && newDiet.image) {
-      // 간단한 AI 칼로리 분석 (실제로는 더 정교할 수 있음)
-      const foodDatabase = {
-        '닭가슴살': { calories: 165, protein: 31, carbs: 0, fat: 3.6 },
-        '계란': { calories: 77.5, protein: 6.3, carbs: 0.6, fat: 5.3 },
-        '밥': { calories: 130, protein: 2.7, carbs: 28, fat: 0.3 },
-        '고구마': { calories: 86, protein: 1.6, carbs: 20, fat: 0.1 },
-        '소고기': { calories: 250, protein: 26, carbs: 0, fat: 17 },
-        '생선': { calories: 82, protein: 17, carbs: 0, fat: 0.7 },
-      };
+  const [dietLoading, setDietLoading] = React.useState(false);
 
-      let calories = 100, protein = 10, carbs = 10, fat = 5;
-      
-      Object.keys(foodDatabase).forEach(food => {
-        if (newDiet.foodName.includes(food)) {
-          const data = foodDatabase[food];
-          calories = data.calories;
-          protein = data.protein;
-          carbs = data.carbs;
-          fat = data.fat;
-        }
-      });
-
-      setDietAnalysis([...dietAnalysis, {
-        id: Math.max(...dietAnalysis.map(d => d.id), 0) + 1,
-        member: newDiet.member,
-        date: newDiet.date,
-        foodName: newDiet.foodName,
-        calories: Math.round(calories),
-        protein: protein,
-        carbs: carbs,
-        fat: fat,
-        image: newDiet.image,
-        branch: branch
-      }]);
-      setNewDiet({ member: '', date: '', foodName: '', image: null });
-      addNotification('식단 분석', `${newDiet.member}님의 식단이 분석되었습니다.`);
+  const addDietAnalysis = async () => {
+    if (newDiet.member && newDiet.date && newDiet.foodName) {
+      setDietLoading(true);
+      try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 300,
+            messages: [{
+              role: 'user',
+              content: `다음 음식의 영양 정보를 JSON으로만 답해줘. 다른 말 없이 JSON만: {"calories": 숫자, "protein": 숫자, "carbs": 숫자, "fat": 숫자}
+음식: ${newDiet.foodName}`
+            }]
+          })
+        });
+        const data = await response.json();
+        const text = data.content[0].text;
+        const nutrition = JSON.parse(text);
+        setDietAnalysis([...dietAnalysis, {
+          id: Math.max(...dietAnalysis.map(d => d.id), 0) + 1,
+          member: newDiet.member,
+          date: newDiet.date,
+          foodName: newDiet.foodName,
+          calories: Math.round(nutrition.calories),
+          protein: Math.round(nutrition.protein * 10) / 10,
+          carbs: Math.round(nutrition.carbs * 10) / 10,
+          fat: Math.round(nutrition.fat * 10) / 10,
+          image: newDiet.image || '🍽️',
+          branch: branch
+        }]);
+        setNewDiet({ member: '', date: '', foodName: '', image: null });
+        addNotification('식단 분석', `${newDiet.member}님의 식단이 분석되었습니다.`);
+      } catch (e) {
+        alert('분석 실패: ' + e.message);
+      }
+      setDietLoading(false);
     }
   };
 
