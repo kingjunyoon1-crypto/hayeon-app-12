@@ -43,6 +43,7 @@ export default function App() {
     { id: 3, sender: '하현', text: '진안점 회원 상담 완료', timestamp: '14:00', branch: '진안' },
   ]);
 
+  const [notifications, setNotifications] = useState([
     { id: 1, title: '출석 완료', message: '김철수님이 오늘 10:00 PT에 출석했습니다.', time: '10:05', branch: '병점' },
     { id: 2, title: '컨디션 경고', message: '박민준님의 컨디션이 좋지 않습니다.', time: '08:30', branch: '진안' },
   ]);
